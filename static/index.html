@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignSpeak.ai - AI-Powered Sign Language Translation</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+  <div class="bg-animation">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+
+  <div id="authModal" class="modal">
+    <div class="modal-content glassmorphism">
+      <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+      
+      <div id="loginForm" class="auth-form">
+        <div class="auth-header">
+          <div class="auth-icon">🔐</div>
+          <h2>Welcome Back!</h2>
+          <p>Sign in to continue your journey</p>
+        </div>
+        <form onsubmit="handleLogin(event)">
+          <div class="input-group">
+            <label for="loginEmail">📧 Email</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email" required>
+          </div>
+          <div class="input-group">
+            <label for="loginPassword">🔒 Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+          </div>
+          <button type="submit" class="auth-btn">Sign In</button>
+        </form>
+        <p class="auth-switch">
+          Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a>
+        </p>
+
+      </div>
+
+      <div id="signupForm" class="auth-form" style="display:none;">
+        <div class="auth-header">
+          <div class="auth-icon">✨</div>
+          <h2>Join SignSpeak.ai</h2>
+          <p>Create your account to get started</p>
+        </div>
+        <form onsubmit="handleSignup(event)">
+          <div class="input-group">
+            <label for="signupName">👤 Full Name</label>
+            <input type="text" id="signupName" placeholder="Enter your name" required>
+          </div>
+          <div class="input-group">
+            <label for="signupEmail">📧 Email</label>
+            <input type="email" id="signupEmail" placeholder="Enter your email" required>
+          </div>
+          <div class="input-group">
+            <label for="signupPassword">🔒 Password</label>
+            <input type="password" id="signupPassword" placeholder="Create a password" required>
+          </div>
+          <button type="submit" class="auth-btn">Create Account</button>
+        </form>
+        <p class="auth-switch">
+          Already have an account? <a href="#" onclick="showLogin()">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <header class="glassmorphism">
+    <nav>
+      <div class="logo">
+        <span class="logo-icon">🤟</span>
+        <span class="logo-text">SignSpeak.ai</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#translator">Translator</a></li>
+        <li><a href="#guide">Learn Signs</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+      </ul>
+      <div class="user-section">
+        <span id="userGreeting" style="display:none;">Hello, <span id="userName"></span></span>
+        <button id="authButton" class="glass-btn" onclick="handleAuthClick()">Login</button>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content" data-lazy>
+      <h1 class="glitch" data-text="🤚 AI-Powered Translation">🤚 AI-Powered Translation</h1>
+      <p class="tagline">SignSpeak.ai: Bridging Hands and Words</p>
+      <p class="description">
+        Transform American Sign Language (ASL) and Indian Sign Language (ISL) into English in real-time using cutting-edge AI gesture recognition.
+      </p>
+      <div class="hero-buttons">
+        <a href="#translator" class="glass-btn primary">🚀 Start Translating</a>
+        <a href="#about" class="glass-btn secondary">📚 Learn More</a>
+      </div>
+    </div>
+    <div class="hero-3d">
+      <div class="floating-card card-1" data-lazy>
+        <div class="card-icon">👋</div>
+        <p>Real-Time</p>
+      </div>
+      <div class="floating-card card-2" data-lazy>
+        <div class="card-icon">⚡</div>
+        <p>Lightning Fast</p>
+      </div>
+      <div class="floating-card card-3" data-lazy>
+        <div class="card-icon">🌍</div>
+        <p>Multi-Language</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section" data-lazy>
+    <div class="stat-card glassmorphism">
+      <div class="stat-number">500K+</div>
+      <div class="stat-label">ASL Users</div>
+    </div>
+    <div class="stat-card glassmorphism">
+      <div class="stat-number">2.5M+</div>
+      <div class="stat-label">ISL Users</div>
+    </div>
+    <div class="stat-card glassmorphism">
+      <div class="stat-number">99%</div>
+      <div class="stat-label">Accuracy</div>
+    </div>
+    <div class="stat-card glassmorphism">
+      <div class="stat-number">24/7</div>
+      <div class="stat-label">Available</div>
+    </div>
+  </section>
+
+  <section class="camera-section" id="translator" data-lazy>
+    <div class="section-header">
+      <h2>Live Translation Studio</h2>
+      <p>Experience real-time sign language recognition</p>
+    </div>
+    <div class="translator-container glassmorphism-strong">
+      <div id="video-container">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="output" width="640" height="480"></canvas>
+        
+        <div id="fps" class="glassmorphism">FPS: --</div>
+        <div id="prediction" class="glassmorphism">Prediction: None</div>
+        <div id="confidence-bar" class="glassmorphism">
+          <div id="confidence-fill"></div>
+        </div>
+      </div>
+      
+      <div id="controls">
+        <button class="glass-btn primary" onclick="startCamera()">▶ Start Camera</button>
+        <button class="glass-btn secondary" onclick="stopCamera()">⏹ Stop Camera</button>
+        <button class="glass-btn secondary" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+        
+        <select id="resolutionSelector" class="glass-select" onchange="changeResolution(this.value)">
+          <option value="640x480">640x480</option>
+          <option value="1280x720" selected>1280x720</option>
+          <option value="1920x1080">1920x1080</option>
+        </select>
+        
+        <select id="themeSelector" class="glass-select" onchange="switchTheme(this.value)">
+          <option value="purple">Purple Galaxy</option>
+          <option value="ocean">Ocean Blue</option>
+          <option value="sunset">Sunset Orange</option>
+          <option value="forest">Forest Green</option>
+          <option value="neon">Neon Cyber</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works" data-lazy>
+    <h2>How It Works</h2>
+    <p class="section-subtitle">Simple, fast, and accurate translation in three easy steps</p>
+    <div class="steps-grid">
+      <div class="step-card glassmorphism-strong">
+        <div class="step-number">01</div>
+        <div class="step-icon">📹</div>
+        <h3>Enable Camera</h3>
+        <p>Allow camera access and position your hands in frame</p>
+      </div>
+      <div class="step-card glassmorphism-strong">
+        <div class="step-number">02</div>
+        <div class="step-icon">🤲</div>
+        <h3>Sign Naturally</h3>
+        <p>Perform ASL or ISL gestures at your own pace</p>
+      </div>
+      <div class="step-card glassmorphism-strong">
+        <div class="step-number">03</div>
+        <div class="step-icon">💬</div>
+        <h3>Get Translation</h3>
+        <p>See real-time English text and optional speech output</p>
+      </div>
+    </div>
+  </section>
+
+<section class="sign-guide-section" id="guide" data-lazy>
+  <div class="guide-header">
+    <h2>Learn Sign Language</h2>
+    <p class="section-subtitle">Master common signs and alphabets with our interactive guide</p>
+  </div>
+
+  <div class="search-section">
+  <input type="text" id="signSearch" class="glass-input" 
+         placeholder="🔍 Search signs or letters..." 
+         oninput="searchSigns()">
+</div>
+
+
+  <div class="alphabet-section">
+    <h3>ASL & ISL Alphabets</h3>
+    <div class="alphabet-tabs">
+      <button class="tab-btn active" onclick="showAlphabet('asl')">ASL Alphabet</button>
+      <button class="tab-btn" onclick="showAlphabet('isl')">ISL Alphabet</button>
+    </div>
+    
+    <div id="asl-alphabet" class="alphabet-grid">
+      <div class="letter-card glassmorphism-strong" data-letter="A">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">A</div>
+        <div class="letter-desc">Closed fist, thumb on side</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="B">
+        <div class="letter-visual">🖐️</div>
+        <div class="letter-name">B</div>
+        <div class="letter-desc">Flat hand, thumb across palm</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="C">
+        <div class="letter-visual">👌</div>
+        <div class="letter-name">C</div>
+        <div class="letter-desc">Curved hand forming C shape</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="D">
+        <div class="letter-visual">☝️</div>
+        <div class="letter-name">D</div>
+        <div class="letter-desc">Index up, thumb touching fingers</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="E">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">E</div>
+        <div class="letter-desc">Fingers curled, thumb over fingers</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="F">
+        <div class="letter-visual">👌</div>
+        <div class="letter-name">F</div>
+        <div class="letter-desc">Index and thumb touching, others up</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="G">
+        <div class="letter-visual">👉</div>
+        <div class="letter-name">G</div>
+        <div class="letter-desc">Index and thumb extended sideways</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="H">
+        <div class="letter-visual">✌️</div>
+        <div class="letter-name">H</div>
+        <div class="letter-desc">Index and middle extended sideways</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="I">
+        <div class="letter-visual">🤙</div>
+        <div class="letter-name">I</div>
+        <div class="letter-desc">Pinky extended, fist closed</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="J">
+        <div class="letter-visual">🤙</div>
+        <div class="letter-name">J</div>
+        <div class="letter-desc">Pinky traces J shape</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="K">
+        <div class="letter-visual">✌️</div>
+        <div class="letter-name">K</div>
+        <div class="letter-desc">Index up, middle out, thumb between</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="L">
+        <div class="letter-visual">🤟</div>
+        <div class="letter-name">L</div>
+        <div class="letter-desc">L shape with thumb and index</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="M">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">M</div>
+        <div class="letter-desc">Thumb under 3 fingers</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="N">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">N</div>
+        <div class="letter-desc">Thumb under 2 fingers</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="O">
+        <div class="letter-visual">👌</div>
+        <div class="letter-name">O</div>
+        <div class="letter-desc">Circle with all fingers and thumb</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="P">
+        <div class="letter-visual">☝️</div>
+        <div class="letter-name">P</div>
+        <div class="letter-desc">Index down, middle out</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="Q">
+        <div class="letter-visual">👇</div>
+        <div class="letter-name">Q</div>
+        <div class="letter-desc">Index and thumb down</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="R">
+        <div class="letter-visual">🤞</div>
+        <div class="letter-name">R</div>
+        <div class="letter-desc">Index and middle crossed</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="S">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">S</div>
+        <div class="letter-desc">Fist with thumb over fingers</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="T">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">T</div>
+        <div class="letter-desc">Thumb between index and middle</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="U">
+        <div class="letter-visual">✌️</div>
+        <div class="letter-name">U</div>
+        <div class="letter-desc">Index and middle together, up</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="V">
+        <div class="letter-visual">✌️</div>
+        <div class="letter-name">V</div>
+        <div class="letter-desc">Index and middle apart, up</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="W">
+        <div class="letter-visual">🤟</div>
+        <div class="letter-name">W</div>
+        <div class="letter-desc">Three middle fingers up</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="X">
+        <div class="letter-visual">☝️</div>
+        <div class="letter-name">X</div>
+        <div class="letter-desc">Index bent like hook</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="Y">
+        <div class="letter-visual">🤙</div>
+        <div class="letter-name">Y</div>
+        <div class="letter-desc">Thumb and pinky extended</div>
+      </div>
+      <div class="letter-card glassmorphism-strong" data-letter="Z">
+        <div class="letter-visual">☝️</div>
+        <div class="letter-name">Z</div>
+        <div class="letter-desc">Index traces Z shape</div>
+      </div>
+    </div>
+
+    <div id="isl-alphabet" class="alphabet-grid" style="display: none;">
+      <div class="letter-card glassmorphism-strong">
+        <div class="letter-visual">✊</div>
+        <div class="letter-name">A (ISL)</div>
+        <div class="letter-desc">Fist near chin</div>
+      </div>
+      <div class="letter-card glassmorphism-strong">
+        <div class="letter-visual">🖐️</div>
+        <div class="letter-name">B (ISL)</div>
+        <div class="letter-desc">Open palm forward</div>
+      </div>
+      <div class="letter-card glassmorphism-strong">
+        <div class="letter-visual">👌</div>
+        <div class="letter-name">C (ISL)</div>
+        <div class="letter-desc">C shape near mouth</div>
+      </div>
+      <div class="letter-card glassmorphism-strong">
+        <div class="letter-visual">☝️</div>
+        <div class="letter-name">D (ISL)</div>
+        <div class="letter-desc">Index pointing up</div>
+      </div>
+      </div>
+  </div>
+
+  <div class="sign-filter">
+  <button class="filter-btn active" onclick="filterSigns('all')">All</button>
+  <button class="filter-btn" onclick="filterSigns('greetings')">Greetings</button>
+  <button class="filter-btn" onclick="filterSigns('basic')">Basic Needs</button>
+  <button class="filter-btn" onclick="filterSigns('questions')">Questions</button>
+  <button class="filter-btn" onclick="filterSigns('emotions')">Emotions</button>
+  <button class="filter-btn" onclick="filterSigns('actions')">Actions</button>
+  <button class="filter-btn" onclick="filterSigns('numbers')">Numbers</button>
+  <button class="filter-btn" onclick="filterSigns('family')">Family</button>
+</div>
+
+  <div class="common-signs-section">
+    <h3>Common Signs & Phrases</h3>
+    <div class="signs-grid">
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Greetings</div>
+        <div class="sign-emoji">👋</div>
+        <h4>Hello</h4>
+        <p class="sign-instruction">Wave hand from side to side</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Greetings</div>
+        <div class="sign-emoji">🙏</div>
+        <h4>Thank You</h4>
+        <p class="sign-instruction">Hand from chin forward (ASL) / Namaste gesture (ISL)</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Greetings</div>
+        <div class="sign-emoji">👋</div>
+        <h4>Goodbye</h4>
+        <p class="sign-instruction">Open palm, fingers wave</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Basic Needs</div>
+        <div class="sign-emoji">💧</div>
+        <h4>Water</h4>
+        <p class="sign-instruction">W shape near mouth, tap twice</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Basic Needs</div>
+        <div class="sign-emoji">🍽️</div>
+        <h4>Food / Eat</h4>
+        <p class="sign-instruction">Fingers to mouth repeatedly</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Basic Needs</div>
+        <div class="sign-emoji">🛏️</div>
+        <h4>Sleep</h4>
+        <p class="sign-instruction">Hand beside head, eyes closed</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Questions</div>
+        <div class="sign-emoji">❓</div>
+        <h4>What</h4>
+        <p class="sign-instruction">Palms up, shake side to side</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Questions</div>
+        <div class="sign-emoji">🕐</div>
+        <h4>When</h4>
+        <p class="sign-instruction">Circle motion with index finger</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Questions</div>
+        <div class="sign-emoji">📍</div>
+        <h4>Where</h4>
+        <p class="sign-instruction">Index finger shake side to side</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Emotions</div>
+        <div class="sign-emoji">😊</div>
+        <h4>Happy</h4>
+        <p class="sign-instruction">Brush chest upward with flat hand</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Emotions</div>
+        <div class="sign-emoji">😢</div>
+        <h4>Sad</h4>
+        <p class="sign-instruction">Fingers trace tears down face</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Emotions</div>
+        <div class="sign-emoji">❤️</div>
+        <h4>Love</h4>
+        <p class="sign-instruction">Cross arms over chest</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Actions</div>
+        <div class="sign-emoji">🙋</div>
+        <h4>Help</h4>
+        <p class="sign-instruction">Flat hand lifts fist upward</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Actions</div>
+        <div class="sign-emoji">✅</div>
+        <h4>Yes</h4>
+        <p class="sign-instruction">Fist nods like head nodding</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Actions</div>
+        <div class="sign-emoji">❌</div>
+        <h4>No</h4>
+        <p class="sign-instruction">Index and middle snap together</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Numbers</div>
+        <div class="sign-emoji">1️⃣</div>
+        <h4>One</h4>
+        <p class="sign-instruction">Index finger up</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Numbers</div>
+        <div class="sign-emoji">2️⃣</div>
+        <h4>Two</h4>
+        <p class="sign-instruction">Index and middle fingers up</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Numbers</div>
+        <div class="sign-emoji">5️⃣</div>
+        <h4>Five</h4>
+        <p class="sign-instruction">All five fingers extended</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Family</div>
+        <div class="sign-emoji">👨</div>
+        <h4>Father</h4>
+        <p class="sign-instruction">Thumb on forehead, fingers spread</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Family</div>
+        <div class="sign-emoji">👩</div>
+        <h4>Mother</h4>
+        <p class="sign-instruction">Thumb on chin, fingers spread</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+        </div>
+      </div>
+
+      <div class="sign-card-demo glassmorphism-strong">
+        <div class="sign-category">Family</div>
+        <div class="sign-emoji">👶</div>
+        <h4>Baby</h4>
+        <p class="sign-instruction">Rock arms like holding baby</p>
+        <div class="sign-tips">
+          <span class="tip-badge">ASL</span>
+          <span class="tip-badge">ISL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="practice-section glassmorphism-strong">
+    <h3>🎯 Quick Practice Tips</h3>
+    <div class="tips-grid">
+      <div class="tip-item">
+        <div class="tip-icon">👁️</div>
+        <h4>Maintain Eye Contact</h4>
+        <p>Look at the person while signing, not at your hands</p>
+      </div>
+      <div class="tip-item">
+        <div class="tip-icon">😊</div>
+        <h4>Facial Expressions Matter</h4>
+        <p>Your face conveys emotion and grammar in sign language</p>
+      </div>
+      <div class="tip-item">
+        <div class="tip-icon">🐌</div>
+        <h4>Start Slow</h4>
+        <p>Practice signs slowly and clearly before increasing speed</p>
+      </div>
+      <div class="tip-item">
+        <div class="tip-icon">🔄</div>
+        <h4>Practice Daily</h4>
+        <p>Consistency is key - practice 10-15 minutes every day</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  <section class="about-section" id="about" data-lazy>
+    <h2>Understanding Sign Languages</h2>
+    <div class="sign-language-grid">
+      <div class="sign-card glassmorphism-strong">
+        <div class="sign-header">
+          <div class="flag-icon">🇺🇸</div>
+          <h3>American Sign Language (ASL)</h3>
+        </div>
+        <p class="sign-intro">
+          ASL is the predominant sign language used by Deaf communities in the United States and parts of Canada. It's a complete, natural language with its own grammar and syntax, distinct from English.
+        </p>
+        <ul class="sign-features">
+          <li><strong>Users:</strong> Over 500,000 people in North America</li>
+          <li><strong>Structure:</strong> Uses hand shapes, facial expressions, and body movements</li>
+          <li><strong>Grammar:</strong> Differs from English with unique word order and syntax</li>
+          <li><strong>History:</strong> Developed in the early 19th century</li>
+        </ul>
+      </div>
+
+      <div class="sign-card glassmorphism-strong">
+        <div class="sign-header">
+          <div class="flag-icon">🇮🇳</div>
+          <h3>Indian Sign Language (ISL)</h3>
+        </div>
+        <p class="sign-intro">
+          ISL is the primary sign language used by the Deaf community in India. It has regional variations and incorporates cultural elements unique to the Indian subcontinent.
+        </p>
+        <ul class="sign-features">
+          <li><strong>Users:</strong> Over 2.5 million Deaf individuals in India</li>
+          <li><strong>Structure:</strong> Combines hand gestures with facial expressions</li>
+          <li><strong>Variations:</strong> Regional dialects across different Indian states</li>
+          <li><strong>Recognition:</strong> Officially recognized as a distinct language</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="why-matters glassmorphism-strong">
+      <h3>Why Sign Language Translation Matters</h3>
+      <p>
+        Sign language is the primary mode of communication for millions of Deaf and hard-of-hearing individuals worldwide. By providing real-time translation between sign languages and spoken languages, SignSpeak.ai breaks down communication barriers, promotes inclusivity, and empowers the Deaf community to participate fully in society. Our AI-powered technology makes sign language accessible to everyone, fostering understanding and connection across different modes of communication.
+      </p>
+    </div>
+  </section>
+
+  <section class="features-section" id="features" data-lazy>
+    <h2>Platform Features & Capabilities</h2>
+    <p class="section-subtitle">Discover what makes SignSpeak.ai your complete sign language translation solution</p>
+    
+    <div class="features-grid">
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">📹</div>
+        <h3>Real-Time Camera Detection</h3>
+        <p>Webcam-based live hand gesture tracking with instant AI-powered recognition</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">⚡</div>
+        <h3>Lightning Fast Translation</h3>
+        <p>Process and translate signs in milliseconds with high confidence scores</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">🔐</div>
+        <h3>User Authentication & History</h3>
+        <p>Secure login system with personal translation history and profile management</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">🌍</div>
+        <h3>ASL & ISL Support</h3>
+        <p>Switch between American and Indian Sign Languages with full alphabet guides</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">🎙️</div>
+        <h3>Text-to-Speech Output</h3>
+        <p>Convert detected signs to speech for improved accessibility and communication</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">📊</div>
+        <h3>Translation History</h3>
+        <p>Save and review all your translations with timestamps and confidence scores</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">⚙️</div>
+        <h3>Customizable Settings</h3>
+        <p>Choose your preferred language (ASL/ISL), theme, and camera source</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">📚</div>
+        <h3>Learning Resources</h3>
+        <p>Access complete alphabet guides and common word/phrase dictionaries</p>
+      </div>
+
+      <div class="feature-card glassmorphism-strong">
+        <div class="feature-icon">📱</div>
+        <h3>Responsive Design</h3>
+        <p>Works seamlessly across desktop, tablet, and mobile devices</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" data-lazy>
+    <div class="cta-content glassmorphism-strong">
+      <h2>Ready to Bridge the Communication Gap?</h2>
+      <p>Start translating sign language to English today with SignSpeak.ai</p>
+      <a href="#translator" class="glass-btn primary large">🚀 Launch Translator</a>
+    </div>
+  </section>
+
+  <footer class="glassmorphism">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>🤟 SignSpeak.ai</h3>
+        <p>Bridging communication gaps with AI-powered sign language translation for ASL and ISL.</p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#translator">Translator</a></li>
+          <li><a href="#about">Language Guide</a></li>
+          <li><a href="#features">Features</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#about">About ASL & ISL</a></li>
+          <li><a href="#">Settings</a></li>
+          <li><a href="#">Documentation</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Accessibility</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 SignSpeak.ai. All rights reserved.</p>
+      <p>Made with ❤️ for the deaf and hard-of-hearing community</p>
+    </div>
+  </footer>
+
+  <script src="/static/auth.js"></script>
+  <script src="/static/script.js"></script>
+  <script src="/static/guide.js"></script>
+</body>
+</html>

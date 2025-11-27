@@ -1,0 +1,35 @@
+{
+  "themes": {
+    "dark": {
+      "backgroundGradient": "linear-gradient(135deg, #141E30, #243B55)",
+      "textColor": "white",
+      "videoBorderColor": "#00FFCC",
+      "canvasBorderColor": "#FF0066",
+      "predictionTextColor": "#FFD700",
+      "buttonBg": "#00FFCC",
+      "buttonHoverBg": "#FF0066",
+      "buttonHoverText": "white"
+    },
+    "light": {
+      "backgroundGradient": "linear-gradient(135deg, #ffffff, #e6e6e6)",
+      "textColor": "#333",
+      "videoBorderColor": "#5555ff",
+      "canvasBorderColor": "#ff4444",
+      "predictionTextColor": "#3333cc",
+      "buttonBg": "#5555ff",
+      "buttonHoverBg": "#3333cc",
+      "buttonHoverText": "white"
+    },
+    "neon": {
+      "backgroundGradient": "linear-gradient(135deg, #0f0f0f, #1a1a1a)",
+      "textColor": "#39FF14",
+      "videoBorderColor": "#FF00FF",
+      "canvasBorderColor": "#39FF14",
+      "predictionTextColor": "#FF00FF",
+      "buttonBg": "#39FF14",
+      "buttonHoverBg": "#FF00FF",
+      "buttonHoverText": "#000"
+    }
+  },
+  "defaultTheme": "dark"
+}
